@@ -82,7 +82,7 @@ set(OMR_INSTALL_ARCHIVE_DIR "${j9vm_SOURCE_DIR}/lib" CACHE PATH "")
 
 # Generic configuration for omr
 include(cmake/omr_config.cmake)
-
+hello
 
 #clean up the variables we used
 set(versionStr)
@@ -97,6 +97,14 @@ set(conditionalVersionString)
 configure_file(include/j9cfg.h.in j9cfg.h)
 configure_file(include/j9lib.h.in j9lib.h)
 configure_file(include/j9version.h.in j9version.h)
+
+# Generate jvmti.h
+
+add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/include/jvmti.h"
+    COMMAND m4 -D JAVA_SPEC_VERSION=${VERSION_MAJOR} "${CMAKE_CURRENT_SOURCE_DIR}/include/jvmti.h.m4" > jvmti.h
+		WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/include"
+	)
+# No dependency required
 
 # Definition of add_hookgen pulled in from omr/cmake/modules/OmrHookgen.cmake
 # Here we handle all the .hdf files which dont have a more logical home.
