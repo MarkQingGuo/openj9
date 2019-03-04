@@ -7185,6 +7185,7 @@ done:
 
 	/*
 	 * Determine if the two objects are substitutable
+	 *
 	 * @param[in] lhs the lhs object of acmp bytecodes
 	 * @param[in] rhs the rhs object of acmp bytecodes
 	 * return true if they are equal and false otherwise
@@ -7201,14 +7202,11 @@ done:
 		} else {
 			J9Class * lhsClass = J9OBJECT_CLAZZ(_currentThread, lhs);
 			J9Class * rhsClass = J9OBJECT_CLAZZ(_currentThread, rhs);
-			if (J9_IS_J9CLASS_VALUETYPE(lhsClass)
-					&& J9_IS_J9CLASS_VALUETYPE(rhsClass)
+			if ((J9_IS_J9CLASS_VALUETYPE(lhsClass)
+					&& J9_IS_J9CLASS_VALUETYPE(rhsClass))
+					&& (lhsClass == rhsClass)
 			) {
-				if (lhsClass == rhsClass) {
-					acmpResult = isSubstitutable(lhs, rhs);
-				} else {
-					acmpResult = false;
-				}
+				acmpResult = isSubstitutable(lhs, rhs);
 			} else {
 				acmpResult = false;
 			}
@@ -7222,6 +7220,7 @@ done:
 #if defined(J9VM_OPT_VALHALLA_VALUE_TYPES)
 	/*
 	 * Determine if the two valueTypes are substitutable when rhs.class equals lhs.class
+	 *
 	 * @param[in] lhs the lhs object of acmp bytecodes and it's a valueType
 	 * @param[in] rhs the rhs object of acmp bytecodes and it's a valueType
 	 * return true if they are equal and false otherwise
