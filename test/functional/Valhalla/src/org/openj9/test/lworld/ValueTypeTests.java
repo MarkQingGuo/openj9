@@ -50,7 +50,7 @@ import org.testng.annotations.Test;
 public class ValueTypeTests {
 	//order by class
 	static Lookup lookup = MethodHandles.lookup();
-	static Unsafe myUnsafe = getUnsafeInstance();
+	static Unsafe myUnsafe = createUnsafeInstance();
 	//point2DClass: make sure point2DClass is not null, getX is updated
 	static Class point2DClass = null;
 	static MethodHandle makePoint2D = null;	
@@ -946,6 +946,21 @@ public class ValueTypeTests {
 			}
 		throw new Error("Unable to find an instance of Unsafe");
 	}
+	
+	static Unsafe createUnsafeInstance() throws Throwable {
+		try {
+			Field[] staticFields = Unsafe.class.getDeclaredFields();
+			for (Field field : staticFields) {
+				if (field.getType() == Unsafe.class) {
+					field.setAccessible(true);
+					return (Unsafe)field.get(Unsafe.class);
+					}
+				}
+		} catch(IllegalAccessException e) {
+			throw new Error("Unable to find an instance of Unsafe");
+		}
+	}
+	
 	
 	
 	static void checkEqualPoint2D(Object point, int[] positions) throws Throwable {
