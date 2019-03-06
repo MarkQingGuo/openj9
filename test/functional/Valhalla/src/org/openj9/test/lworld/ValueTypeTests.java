@@ -26,6 +26,7 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Method;
+import java.lang.reflect.Field;
 import sun.misc.Unsafe;
 
 import org.testng.Assert;
@@ -47,18 +48,56 @@ import org.testng.annotations.Test;
 
 @Test(groups = { "level.sanity" })
 public class ValueTypeTests {
+	//order by class
 	static Lookup lookup = MethodHandles.lookup();
 	static Unsafe myUnsafe = getUnsafeInstance();
+	//point2DClass: make sure point2DClass is not null, getX is updated
 	static Class point2DClass = null;
-	static Class line2DClass = null;
-	static Class flattenedLine2DClass = null;
-	static MethodHandle makePoint2D = null;
-	static MethodHandle makeLine2D = null;
-	static MethodHandle makeFlattenedLine2D = null;
+	static MethodHandle makePoint2D = null;	
 	static MethodHandle getX = null;
 	static MethodHandle getY = null;
+	//line2DClass
+	static Class line2DClass = null;
+	static MethodHandle makeLine2D = null;
 	static MethodHandle getSt = null;
 	static MethodHandle getEn = null;
+	//flattenLine2DClass
+	static Class flattenedLine2DClass = null;
+	static MethodHandle makeFlattenedLine2D = null;
+	static MethodHandle getStGeneric = null;
+	static MethodHandle getEnGeneric = null;
+	//triangleClass
+	static Class triangle2DClass = null;
+	static MethodHandle makeTriangle2D = null;
+	static MethodHandle getV1Generic = null;
+	static MethodHandle getV2Generic = null;
+	static MethodHandle getV3Generic = null;
+	//valueLongClass
+	static Class valueLongClass = null;
+	static MethodHandle makeValueLong = null;
+	static MethodHandle getLong = null;
+	static MethodHandle withLong = null;
+	//valueIntClass
+	static Class valueIntClass = null;
+	static MethodHandle makeValueInt = null;
+	static MethodHandle getInt = null;
+	static MethodHandle withInt = null;
+	//valueDoubleClass
+	static Class valueDoubleClass = null;
+	static MethodHandle makeValueDouble = null;
+	static MethodHandle getDouble = null;
+	static MethodHandle withDouble = null;
+	//valueFloatClass
+	static Class valueFloatClass =null;
+	static MethodHandle makeValueFloat = null;
+	static MethodHandle getFloat = null;
+	static MethodHandle withFloat = null;
+	//valueObejctClass
+	static Class valueObjectClass = null;
+	static MethodHandle makeValueObject = null;
+	static MethodHandle getObject = null;
+	static MethodHandle withObject = null;
+
 
 	/*
 	 * Create a value type
@@ -95,6 +134,19 @@ public class ValueTypeTests {
 		
 		assertEquals(getX.invoke(point2D), xNew);
 		assertEquals(getY.invoke(point2D), yNew);
+		
+		Field myField = point2DClass.getDeclaredField("x");
+		long myFieldOffset = myUnsafe.objectFieldOffset(myField);
+		int value = myUnsafe.getInt(point2D, myFieldOffset);
+		if (value != xNew) {
+			throw new Error("Expected " + xNew + " from getInt() but got " + value);
+		}
+		myField = point2DClass.getDeclaredField("y");
+		myFieldOffset = myUnsafe.objectFieldOffset(myField);
+		value = myUnsafe.getInt(point2D, myFieldOffset);
+		if (value != yNew) {
+			throw new Error("Expected " + yNew + " from getInt() but got " + value);
+		}
 	}
 
 	/*
@@ -141,6 +193,19 @@ public class ValueTypeTests {
 		point2D = withJGeneric.invoke(point2D, j);
 		assertEquals(getDGeneric.invoke(point2D), d);
 		assertEquals(getJGeneric.invoke(point2D), j);
+		
+		Field myField = point2DComplexClass.getDeclaredField("d");
+		long myFieldOffset = myUnsafe.objectFieldOffset(myField);
+		double dValue = myUnsafe.getDouble(point2D, myFieldOffset);
+		if (dValue != dNew) {
+			throw new Error("Expected " + dNew + " from getInt() but got " + dValue);
+		}
+		myField = point2DClass.getDeclaredField("j");
+		myFieldOffset = myUnsafe.objectFieldOffset(myField);
+		long jValue = myUnsafe.getLong(point2D, myFieldOffset);
+		if (jValue != jNew) {
+			throw new Error("Expected " + jNew + " from getInt() but got " + jValue);
+		}
 	}
 
 	/*
@@ -405,6 +470,7 @@ public class ValueTypeTests {
 	 * 
 	 * 	flattened line2d v1,v2,v3
 	 */
+	/*
 	@Test(priority=3)
 	static public void testCreateTriangle2D() throws Throwable {
 		String fields[] = {"v1:LFlattenedLine2D;:value", "v2:LFlattenedLine2D;:value", "v3:LFlattenedLine2D;:value"};
@@ -422,6 +488,7 @@ public class ValueTypeTests {
  		/*
  		 * Todo: xNews and yNews
  		 */
+	/*
 		int x_st = 0xFFEEFFEE;
 		int y_st = 0xAABBAABB;
 		int x_en = 0xEEFFEEFF;
@@ -497,127 +564,125 @@ public class ValueTypeTests {
 		/*
 		 * TODO: generic ones,change name remove _
 		 */
-	}
+	//}
 	
 	/*
 	 * Create a value type with a long primitive member
 	 * 
-	 * value ValLong {
+	 * value ValueLong {
 	 * 	long j;
 	 * }
 	 */
 	@Test(priority=1)
-	static public void testCreateValLong() throws Throwable {
+	static public void testCreateValueLong() throws Throwable {
 		String fields[] = {"j:J"};
-		Class valLongClass = ValueTypeGenerator.generateValueClass("ValLong", fields);
-		
-		MethodHandle makeValLong = lookup.findStatic(valLongClass, "makeValue", MethodType.methodType(valLong, long.class));
+		valueLongClass = ValueTypeGenerator.generateValueClass("ValueLong", fields);
+		makeValueLong = lookup.findStatic(valueLongClass, "makeValue", MethodType.methodType(valueLongClass, long.class));
 
-		MethodHandle getJ = generateGetter(valLongClass, "j", long.class);
-		MethodHandle withJ = generateWither(valLongClass, "j", long.class);
+		getLong = generateGetter(valueLongClass, "j", long.class);
+		withLong = generateWither(valueLongClass, "j", long.class);
 
 		long j = Long.MAX_VALUE;
 		long jNew = Long.MIN_VALUE;
-		Object valLong = makeValLong.invoke(j);
+		Object valueLong = makeValueLong.invoke(j);
 		
-		assertEquals(getJ.invoke(valLong), j);
+		assertEquals(getLong.invoke(valueLong), j);
 	
-		valLong = withJ.invoke(valLong, jNew);
-		assertEquals(getJ.invoke(valLong), jNew);
+		valueLong = withLong.invoke(valueLong, jNew);
+		assertEquals(getLong.invoke(valueLong), jNew);
 
 
-		MethodHandle getJGeneric = generateGenericGetter(valLong, "j");
-		MethodHandle withJGeneric = generateGenericWither(valLong, "j");
+		MethodHandle getJGeneric = generateGenericGetter(valueLongClass, "j");
+		MethodHandle withJGeneric = generateGenericWither(valueLongClass, "j");
 		
-		valLong = withJGeneric.invoke(valLong, j);
-		assertEquals(getJGeneric.invoke(valLong), j);
+		valueLong = withJGeneric.invoke(valueLong, j);
+		assertEquals(getJGeneric.invoke(valueLong), j);
 		
-		Field myField = valLong.getDeclaredField("j");
+		Field myField = valueLongClass.getDeclaredField("j");
 		long myFieldOffset = myUnsafe.objectFieldOffset(myField);
-		long value = myUnsafe.getLong(valLong, myFieldOffset);
+		long value = myUnsafe.getLong(valueLong, myFieldOffset);
 		if (value != j) {
 			throw new Error("Expected " + j + " from getLong() but got " + value);
 		}
-
 	}	
 
 	/*
 	 * Create a value type with a int primitive member
 	 * 
-	 * value ValInt {
+	 * value valueInt {
 	 * 	int i;
 	 * }
 	 */
 	@Test(priority=1)
-	static public void testCreateValInt() throws Throwable {
+	static public void testCreatevalueInt() throws Throwable {
 		String fields[] = {"i:I"};
-		Class valIntClass = ValueTypeGenerator.generateValueClass("ValInt", fields);
+		valueIntClass = ValueTypeGenerator.generateValueClass("valueInt", fields);
 		
-		MethodHandle makeValInt = lookup.findStatic(valIntClass, "makeValue", MethodType.methodType(valInt, int.class));
+		makeValueInt = lookup.findStatic(valueIntClass, "makeValue", MethodType.methodType(valueIntClass, int.class));
 
-		MethodHandle getI = generateGetter(valIntClass, "i", int.class);
-		MethodHandle withI = generateWither(valIntClass, "i", int.class);
+		getInt = generateGetter(valueIntClass, "i", int.class);
+		withInt = generateWither(valueIntClass, "i", int.class);
 
 		int i = Integer.MAX_VALUE;
 		int iNew = Integer.MIN_VALUE;
-		Object valInt = makeValInt.invoke(i);
+		Object valueInt = makeValueInt.invoke(i);
 		
-		assertEquals(getI.invoke(valInt), i);
+		assertEquals(getInt.invoke(valueInt), i);
 	
-		valInt = withI.invoke(valInt, iNew);
-		assertEquals(getI.invoke(valInt), iNew);
+		valueInt = withInt.invoke(valueInt, iNew);
+		assertEquals(getInt.invoke(valueInt), iNew);
 
 
-		MethodHandle getIGeneric = generateGenericGetter(valInt, "i");
-		MethodHandle withIGeneric = generateGenericWither(valInt, "i");
+		MethodHandle getIGeneric = generateGenericGetter(valueIntClass, "i");
+		MethodHandle withIGeneric = generateGenericWither(valueIntClass, "i");
 		
-		valInt = withIGeneric.invoke(valInt, i);
-		assertEquals(getIGeneric.invoke(valInt), i);
+		valueInt = withIGeneric.invoke(valueInt, i);
+		assertEquals(getIGeneric.invoke(valueInt), i);
 		
-		Field myField = valInt.getDeclaredField("i");
+		Field myField = valueIntClass.getDeclaredField("i");
 		long myFieldOffset = myUnsafe.objectFieldOffset(myField);
-		int value = myUnsafe.getLong(valInt, myFieldOffset);
+		int value = myUnsafe.getInt(valueInt, myFieldOffset);
 		if (value != i) {
 			throw new Error("Expected " + i + " from getInt() but got " + value);
 		}
 	}		
 	
 	/*
-	 * Create a value type with a int primitive member
+	 * Create a value type with a double primitive member
 	 * 
-	 * value ValDouble {
+	 * value ValueDouble {
 	 * 	double d;
 	 * }
 	 */
 	@Test(priority=1)
-	static public void testCreateValDouble() throws Throwable {
+	static public void testCreateValueDouble() throws Throwable {
 		String fields[] = {"d:D"};
-		Class valDoubleClass = ValueTypeGenerator.generateValueClass("ValDouble", fields);
+		valueDoubleClass = ValueTypeGenerator.generateValueClass("ValueDouble", fields);
 		
-		MethodHandle makeValDouble = lookup.findStatic(valDoubleClass, "makeValue", MethodType.methodType(valDouble, double.class));
+		makeValueDouble = lookup.findStatic(valueDoubleClass, "makeValue", MethodType.methodType(valueDoubleClass, double.class));
 
-		MethodHandle getD = generateGetter(valDoubleClass, "d", double.class);
-		MethodHandle withD = generateWither(valDoubleClass, "d", double.class);
+		getDouble = generateGetter(valueDoubleClass, "d", double.class);
+		withDouble = generateWither(valueDoubleClass, "d", double.class);
 
-		int d = Double.MAX_VALUE;
-		int dNew = Double.MIN_VALUE;
-		Object valDouble = makeValDouble.invoke(d);
+		double d = Double.MAX_VALUE;
+		double dNew = Double.MIN_VALUE;
+		Object valueDouble = makeValueDouble.invoke(d);
 		
-		assertEquals(getD.invoke(valDouble), d);
+		assertEquals(getDouble.invoke(valueDouble), d);
 	
-		valDouble = withD.invoke(valDouble, dNew);
-		assertEquals(getD.invoke(valDouble), dNew);
+		valueDouble = withDouble.invoke(valueDouble, dNew);
+		assertEquals(getDouble.invoke(valueDouble), dNew);
 
 
-		MethodHandle getDGeneric = generateGenericGetter(valDouble, "d");
-		MethodHandle withDGeneric = generateGenericWither(valDouble, "d");
+		MethodHandle getDGeneric = generateGenericGetter(valueDoubleClass, "d");
+		MethodHandle withDGeneric = generateGenericWither(valueDoubleClass, "d");
 		
-		valDouble = withDGeneric.invoke(valDouble, d);
-		assertEquals(getDGeneric.invoke(valDouble), d);
+		valueDouble = withDGeneric.invoke(valueDouble, d);
+		assertEquals(getDGeneric.invoke(valueDouble), d);
 		
-		Field myField = valDouble.getDeclaredField("d");
+		Field myField = valueDoubleClass.getDeclaredField("d");
 		long myFieldOffset = myUnsafe.objectFieldOffset(myField);
-		double value = myUnsafe.getDouble(valDouble, myFieldOffset);
+		double value = myUnsafe.getDouble(valueDouble, myFieldOffset);
 		if (value != d) {
 			throw new Error("Expected " + d + " from getDouble() but got " + value);
 		}
@@ -626,39 +691,39 @@ public class ValueTypeTests {
 	/*
 	 * Create a value type with a float primitive member
 	 * 
-	 * value ValFloat {
+	 * value ValueFloat {
 	 * 	float f;
 	 * }
 	 */
 	@Test(priority=1)
-	static public void testCreateValFloat() throws Throwable {
+	static public void testCreateValueFloat() throws Throwable {
 		String fields[] = {"f:F"};
-		Class valFloatClass = ValueTypeGenerator.generateValueClass("ValFloat", fields);
+		valueFloatClass = ValueTypeGenerator.generateValueClass("ValueFloat", fields);
 		
-		MethodHandle makeValFloat = lookup.findStatic(valFloatClass, "makeValue", MethodType.methodType(valFloat, float.class));
+		makeValueFloat = lookup.findStatic(valueFloatClass, "makeValue", MethodType.methodType(valueFloatClass, float.class));
 
-		MethodHandle getF = generateGetter(valFloatClass, "f", float.class);
-		MethodHandle withF = generateWither(valFloatClass, "f", float.class);
+		getFloat = generateGetter(valueFloatClass, "f", float.class);
+		withFloat = generateWither(valueFloatClass, "f", float.class);
 
-		int f = Float.MAX_VALUE;
-		int fNew = Float.MIN_VALUE;
-		Object valFloat = makeValFloat.invoke(f);
+		float f = Float.MAX_VALUE;
+		float fNew = Float.MIN_VALUE;
+		Object valueFloat = makeValueFloat.invoke(f);
 		
-		assertEquals(getF.invoke(valFloat), f);
+		assertEquals(getFloat.invoke(valueFloat), f);
 	
-		valFloat = withF.invoke(valFloat, fNew);
-		assertEquals(getF.invoke(valFloat), fNew);
+		valueFloat = withFloat.invoke(valueFloat, fNew);
+		assertEquals(getFloat.invoke(valueFloat), fNew);
 
 
-		MethodHandle getFGeneric = generateGenericGetter(valFloat, "f");
-		MethodHandle withFGeneric = generateGenericWither(valFloat, "f");
+		MethodHandle getFGeneric = generateGenericGetter(valueFloatClass, "f");
+		MethodHandle withFGeneric = generateGenericWither(valueFloatClass, "f");
 		
-		valFloat = withFGeneric.invoke(valFloat, f);
-		assertEquals(getFGeneric.invoke(valFloat), f);
+		valueFloat = withFGeneric.invoke(valueFloat, f);
+		assertEquals(getFGeneric.invoke(valueFloat), f);
 		
-		Field myField = valFloat.getDeclaredField("f");
+		Field myField = valueFloatClass.getDeclaredField("f");
 		long myFieldOffset = myUnsafe.objectFieldOffset(myField);
-		float value = myUnsafe.getFloat(valFloat, myFieldOffset);
+		float value = myUnsafe.getFloat(valueFloat, myFieldOffset);
 		if (value != f) {
 			throw new Error("Expected " + f + " from getFloat() but got " + value);
 		}
@@ -667,41 +732,41 @@ public class ValueTypeTests {
 	/*
 	 * Create a value type with an Object member
 	 * 
-	 * value ValObject {
+	 * value ValueObject {
 	 * 	Object val;
 	 * }
 	 */
 	@Test(priority=1)
-	static public void testCreateValObject() throws Throwable {
+	static public void testCreateValueObject() throws Throwable {
 		String fields[] = {"val:Ljava/lang/Object;:value"};
 
-		Class valObjectClass = ValueTypeGenerator.generateValClass("ValueObject", fields);
+		valueObjectClass = ValueTypeGenerator.generateValClass("ValueObject", fields);
 		
-		MethodHandle makeValObject = lookup.findStatic(valObjectClass, "makeValue", MethodType.methodType(valObject, Object.class));
+		makeValueObject = lookup.findStatic(valueObjectClass, "makeValue", MethodType.methodType(valueObjectClass, Object.class));
 
 		Object val = (Object) 0xEEFFEEFF;
 		Object valNew = (Object) 0xFFEEFFEE;
 		
-		MethodHandle getVal = generateGetter(valObjectClass, "val", Object.class);
-		MethodHandle withVal = generateWither(valObjectClass, "val", Object.class);
+		getObject = generateGetter(valueObjectClass, "val", Object.class);
+		withObject = generateWither(valueObjectClass, "val", Object.class);
 
-		Object valObject = makeValObject.invoke(val);
+		Object valueObject = makeValueObject.invoke(val);
 		
-		assertEquals(getVal.invoke(valObject), val);
+		assertEquals(getObject.invoke(valueObject), val);
 	
-		valObject = withVal.invoke(valObject, valNew);
-		assertEquals(getVal.invoke(valObject), valNew);
+		valueObject = withObject.invoke(valueObject, valNew);
+		assertEquals(getObject.invoke(valueObject), valNew);
 
 
-		MethodHandle getValGeneric = generateGenericGetter(valObject, "val");
-		MethodHandle withValGeneric = generateGenericWither(valObject, "val");
+		MethodHandle getValGeneric = generateGenericGetter(valueObjectClass, "val");
+		MethodHandle withValGeneric = generateGenericWither(valueObjectClass, "val");
 		
-		valObject = withValGeneric.invoke(valObject, val);
-		assertEquals(getValGeneric.invoke(valObject), val);
+		valueObject = withValGeneric.invoke(valueObject, val);
+		assertEquals(getValGeneric.invoke(valueObject), val);
 		
-		Field myField = valObject.getDeclaredField("val");
+		Field myField = valueObjectClass.getDeclaredField("val");
 		long myFieldOffset = myUnsafe.objectFieldOffset(myField);
-		Object value = myUnsafe.getObject(valObject, myFieldOffset);
+		Object value = myUnsafe.getObject(valueObject, myFieldOffset);
 		if (!value.equals(val)) {
 			throw new Error("Expected " + val + " from getFloat() but got " + value);
 		}
@@ -719,46 +784,102 @@ public class ValueTypeTests {
 	 *	flattened ValueInt i;
 	 *	flattened Triangle2D tri;
 	 * }
+	 *
 	 */
-	@Test(priority=1)
-	static public void testCreateValObject() throws Throwable {
+	/*
+	@Test(priority=3)
+	static public void testCreateAssortedValueWithLongAlignment() throws Throwable {
 		/*
 		 * TODO: change val to value
 		 */
+	/*
 		String fields[] = {"point:QPoint2D;:value", "line:QLine2D;:value", "o:QValueObject;:value",
 				"l:QValueLong;:value", "d:QValueDouble;:value", "i:QValueInt;:value", "tri:Triangle2D;:value"};
 
-		Class valObjectClass = ValueTypeGenerator.generateValueClass("ValObject", fields);
+		Class assortedValueClass = ValueTypeGenerator.generateValueClass("AssortedValueWithLongAlignment", fields);
 		
-		MethodHandle makeValObject = lookup.findStatic(valObjectClass, "makeValue", MethodType.methodType(valObject, Object.class));
+		MethodHandle makeAssorted = lookup.findStatic(assortedValueClass, "makeValueGeneric", MethodType.methodType(assortedValueClass, Object.class, Object.class,
+				Object.class, Object.class, Object.class, Object.class, Object.class));
 
-		Object val = (Object) 0xEEFFEEFF;
-		Object valNew = (Object) 0xFFEEFFEE;
-		
-		MethodHandle getVal = generateGetter(valObjectClass, "val", Object.class);
-		MethodHandle withVal = generateWither(valObjectClass, "val", Object.class);
-
-		Object valObject = makeValObject.invoke(val);
-		
-		assertEquals(getVal.invoke(valObject), val);
-	
-		valObject = withVal.invoke(valObject, valNew);
-		assertEquals(getVal.invoke(valObject), valNew);
-
-
-		MethodHandle getValGeneric = generateGenericGetter(valObject, "val");
-		MethodHandle withValGeneric = generateGenericWither(valObject, "val");
-		
-		valObject = withValGeneric.invoke(valObject, val);
-		assertEquals(getValGeneric.invoke(valObject), val);
-		
-		Field myField = valObject.getDeclaredField("val");
-		long myFieldOffset = myUnsafe.objectFieldOffset(myField);
-		Object value = myUnsafe.getObject(valObject, myFieldOffset);
-		if (!value.equals(val)) {
-			throw new Error("Expected " + val + " from getFloat() but got " + value);
+		MethodHandle[][] getterAndWither = new MethodHandle[fields.length][2];
+		for(String field : fields) {
+			//getter
+			field = (field.split(":"))[0];
+			getterAndWither[i][0] = generateGenericGetter(assortedValueClass, field);
+			//wither
+			getterAndWither[i][1] = generateGenericWither(assortedValueClass, field);
 		}
-	}	
+		
+		//create fields
+		Object point = makePoint2D.invoke(a1, a2);
+		Object line = makeFlattenedLine2D.invoke(b1, b2);
+		Object o = makeValueObject.invoke(c1);
+		Object l = makeValueLong.invoke(d1);
+		Object d = makeValueDouble.invoke(e1);
+		Object i = makeValueInt.invoke(f1);
+		Object tri = makeTriangle2D.invoke(h1);
+		
+		
+		//point
+		int[] pointFields = {a1, a2};
+		checkEqualPoint2D(point, pointFields);
+		//line
+		int[][] lineFields = {{b11, b12}, {b21, b22}};
+		checkEqualLine2D(line, lineFields);
+		//Object
+		assertEquals(getObject.invoke(o), c1);
+		//long
+		assertEquals(getLong.invoke(l), d1);
+		//double
+		assertEquals(getDouble.invoke(d), e1);
+		//int
+		assertEquals(getInt.invoke(i), f1);
+		//triangle
+		int[][][] triangleFields = {{{F, F}, {f, f}}, {{f, f}, {f, f}}, {{f, f}, {f, f}}};
+		checkEqualTriangle2D(tri, triangleFields);
+		///////////////////////////
+		Object assortedValue = makeAssorted(point, line, o, l, d, i, tri);
+		//
+		checkEqualPoint2D(getterAndWither[0][0].invoke(assortedValue), pointFields);
+		checkEqualLine2D(getterAndWither[1][0].invoke(assortedValue), lineFields);
+		assertEquals(getObject.invoke(getterAndWither[2][0].invoke(assortedValue)), c1);
+		assertEquals(getLong.invoke(getterAndWither[3][0].invoke(assortedValue)), d1);
+		assertEquals(getDouble.invoke(getterAndWither[4][0].invoke(assortedValue)), e1);
+		assertEquals(getInt.invoke(getterAndWither[5][0].invoke(assortedValue)), f1);
+		checkEqualTriangle2D(getterAndWither[6][0].invoke(assortedValue), h1);
+		//
+		Object pointNew = makePoint2D.invoke(a1, a2);
+		Object lineNew = makeFlattenedLine2D.invoke(b1, b2);
+		Object oNew = makeValueObject.invoke(c1);
+		Object lNew = makeValueLong.invoke(d1);
+		Object dNew = makeValueDouble.invoke(e1);
+		Object iNew = makeValueInt.invoke(f1);
+		Object triNew = makeTriangle2D.invoke(h1);
+		
+		assortedValue = getterAndWither[0][1].invoke(assortedValue, pointNew);
+		assortedValue = getterAndWither[1][1].invoke(assortedValue, lineNew);
+		assortedValue = getterAndWither[2][1].invoke(assortedValue, oNew);
+		assortedValue = getterAndWither[3][1].invoke(assortedValue, lNew);
+		assortedValue = getterAndWither[4][1].invoke(assortedValue, dNew);
+		assortedValue = getterAndWither[5][1].invoke(assortedValue, iNew);
+		assortedValue = getterAndWither[6][1].invoke(assortedValue, triNew);
+		
+		/*
+		 * TODO: check equality
+		 */
+		/*
+		//check offset
+		for(int i = 0; i < fields.length; i++) {
+			String field = (fields[i].split(":"))[0];
+			Field myField = assortedValueClass.getDeclaredField(field);
+			long myFieldOffset = myUnsafe.objectFieldOffset(myField);
+			Object fieldFromOffset = myUnsafe.getObject(assortedValue, myFieldOffset);
+			Object fieldFromGetter = getterAndWither[i][0].invoke(assortedValue);
+			if (fieldFromOffset != fieldFromGetter) {
+				throw new Error("Expected " + i);
+			}			
+		}
+	}*/
 	
 	
 	static MethodHandle generateGetter(Class<?> clazz, String fieldName, Class<?> fieldType) {
@@ -825,6 +946,36 @@ public class ValueTypeTests {
 			}
 		throw new Error("Unable to find an instance of Unsafe");
 	}
-
-
+	
+	
+	static void checkEqualPoint2D(Object point, int[] positions) throws Throwable {
+		if(point == null) {
+			throw new Error("Point Obejct is null!");
+		}
+		assertEquals(getX.invoke(point), positions[0]);
+		assertEquals(getY.invoke(point), positions[1]);
+	}
+	
+	static void checkEqualLine2D(Object line, int[][] positions, boolean flatten) throws Throwable {
+		if(line == null) {
+			throw new Error("Line2D Obejct is null!");
+		}
+		if(flatten == true) {
+			checkEqualPoint2D(getSt.invoke(line), positions[0]);
+			checkEqualPoint2D(getEn.invoke(line), positions[1]);
+		} else {
+			checkEqualPoint2D(getStGeneric.invoke(line), positions[0]);
+			checkEqualPoint2D(getEnGeneric.invoke(line), positions[1]);
+		}
+	}
+	
+	static void checkEqualTriangle2D(Object triangle, int[][][] positions) {
+		if(triangle == null) {
+			throw new Error("Triangle Object is null!");
+		}
+		checkEqualLine2D(getV1Generic.invoke(triangle), positions[0], true);
+		checkEqualLine2D(getV2Generic.invoke(triangle), positions[1], true);		
+		checkEqualLine2D(getV3Generic.invoke(triangle), positions[2], true);		
+	}
 }
+
