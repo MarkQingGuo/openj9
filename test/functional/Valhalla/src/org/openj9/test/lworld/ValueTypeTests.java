@@ -947,7 +947,7 @@ public class ValueTypeTests {
 		throw new Error("Unable to find an instance of Unsafe");
 	}
 	
-	static Unsafe createUnsafeInstance() throws Throwable {
+	static Unsafe createUnsafeInstance() {
 		try {
 			Field[] staticFields = Unsafe.class.getDeclaredFields();
 			for (Field field : staticFields) {
@@ -957,8 +957,10 @@ public class ValueTypeTests {
 					}
 				}
 		} catch(IllegalAccessException e) {
-			Assert.fail("Unable to find an instance of Unsafe");
 		}
+		throw new Error("Unable to find an instance of Unsafe");
+		//trivial object
+		return (Unsafe)null;
 	}
 	
 	static void checkEqualPoint2D(Object point, int[] positions) throws Throwable {
@@ -982,7 +984,7 @@ public class ValueTypeTests {
 		}
 	}
 	
-	static void checkEqualTriangle2D(Object triangle, int[][][] positions) {
+	static void checkEqualTriangle2D(Object triangle, int[][][] positions) throws Throwable {
 		if(triangle == null) {
 			throw new Error("Triangle Object is null!");
 		}
