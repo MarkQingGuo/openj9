@@ -740,7 +740,7 @@ public class ValueTypeTests {
 	static public void testCreateValueObject() throws Throwable {
 		String fields[] = {"val:Ljava/lang/Object;:value"};
 
-		valueObjectClass = ValueTypeGenerator.generateValClass("ValueObject", fields);
+		valueObjectClass = ValueTypeGenerator.generateValueClass("ValueObject", fields);
 		
 		makeValueObject = lookup.findStatic(valueObjectClass, "makeValue", MethodType.methodType(valueObjectClass, Object.class));
 
