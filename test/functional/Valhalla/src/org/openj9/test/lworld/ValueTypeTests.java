@@ -960,7 +960,6 @@ public class ValueTypeTests {
 		}
 		throw new Error("Unable to find an instance of Unsafe");
 		//trivial object
-		return (Unsafe)null;
 	}
 	
 	static void checkEqualPoint2D(Object point, int[] positions) throws Throwable {
