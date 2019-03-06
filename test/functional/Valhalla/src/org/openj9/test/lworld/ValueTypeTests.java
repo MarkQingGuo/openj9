@@ -197,14 +197,14 @@ public class ValueTypeTests {
 		Field myField = point2DComplexClass.getDeclaredField("d");
 		long myFieldOffset = myUnsafe.objectFieldOffset(myField);
 		double dValue = myUnsafe.getDouble(point2D, myFieldOffset);
-		if (dValue != dNew) {
-			throw new Error("Expected " + dNew + " from getInt() but got " + dValue);
+		if (dValue != d) {
+			throw new Error("Expected " + d + " from getDouble() but got " + dValue);
 		}
-		myField = point2DClass.getDeclaredField("j");
+		myField = point2DComplexClass.getDeclaredField("j");
 		myFieldOffset = myUnsafe.objectFieldOffset(myField);
 		long jValue = myUnsafe.getLong(point2D, myFieldOffset);
-		if (jValue != jNew) {
-			throw new Error("Expected " + jNew + " from getInt() but got " + jValue);
+		if (jValue != j) {
+			throw new Error("Expected " + j + " from getLong() but got " + jValue);
 		}
 	}
 
@@ -263,6 +263,19 @@ public class ValueTypeTests {
 		assertEquals(getY.invoke(getSt.invoke(line2D)), yNew);
 		assertEquals(getX.invoke(getEn.invoke(line2D)), x2New);
 		assertEquals(getY.invoke(getEn.invoke(line2D)), y2New);
+	
+		Field myField = line2DClass.getDeclaredField("st");
+		long myFieldOffset = myUnsafe.objectFieldOffset(myField);
+		Object value = myUnsafe.getObject(line2D, myFieldOffset);
+		if (value != stNew) {
+			throw new Error("Different st");
+		}
+		myField = line2DClass.getDeclaredField("en");
+		myFieldOffset = myUnsafe.objectFieldOffset(myField);
+		value = myUnsafe.getObject(line2D, myFieldOffset);
+		if (value != enNew) {
+			throw new Error("Different en");
+		}
 	}
 	
 	/*
@@ -320,6 +333,30 @@ public class ValueTypeTests {
 		assertEquals(getY.invoke(getSt.invoke(line2D)), yNew);
 		assertEquals(getX.invoke(getEn.invoke(line2D)), x2New);
 		assertEquals(getY.invoke(getEn.invoke(line2D)), y2New);
+		
+		Field myField = flattenedLine2DClass.getDeclaredField("st");
+		long myFieldOffset = myUnsafe.objectFieldOffset(myField);
+		
+		int stXValue = myUnsafe.getInt(line2D, myFieldOffset);
+		if (xNew != stXValue) {
+			throw new Error("different x inside st");
+		}
+		int stYValue = myUnsafe.getInt(line2D, (4 + myFieldOffset));
+		if (yNew != stYValue) {
+			throw new Error("different y inside st");
+		}
+
+		myField = flattenedLine2DClass.getDeclaredField("en");
+		myFieldOffset = myUnsafe.objectFieldOffset(myField);
+		
+		int enXValue = myUnsafe.getInt(line2D, myFieldOffset);
+		if (x2New != enXValue) {
+			throw new Error("different x inside en");
+		}
+		int enYValue = myUnsafe.getInt(line2D, (4 + myFieldOffset));
+		if (y2New != enYValue) {
+			throw new Error("different y inside en");
+		}
 	}
 
 	/*
@@ -590,19 +627,12 @@ public class ValueTypeTests {
 	
 		valueLong = withLong.invoke(valueLong, jNew);
 		assertEquals(getLong.invoke(valueLong), jNew);
-
-
-		MethodHandle getJGeneric = generateGenericGetter(valueLongClass, "j");
-		MethodHandle withJGeneric = generateGenericWither(valueLongClass, "j");
-		
-		valueLong = withJGeneric.invoke(valueLong, j);
-		assertEquals(getJGeneric.invoke(valueLong), j);
-		
+	
 		Field myField = valueLongClass.getDeclaredField("j");
 		long myFieldOffset = myUnsafe.objectFieldOffset(myField);
 		long value = myUnsafe.getLong(valueLong, myFieldOffset);
-		if (value != j) {
-			throw new Error("Expected " + j + " from getLong() but got " + value);
+		if (value != jNew) {
+			throw new Error("Expected " + jNew + " from getLong() but got " + value);
 		}
 	}	
 
@@ -632,18 +662,11 @@ public class ValueTypeTests {
 		valueInt = withInt.invoke(valueInt, iNew);
 		assertEquals(getInt.invoke(valueInt), iNew);
 
-
-		MethodHandle getIGeneric = generateGenericGetter(valueIntClass, "i");
-		MethodHandle withIGeneric = generateGenericWither(valueIntClass, "i");
-		
-		valueInt = withIGeneric.invoke(valueInt, i);
-		assertEquals(getIGeneric.invoke(valueInt), i);
-		
 		Field myField = valueIntClass.getDeclaredField("i");
 		long myFieldOffset = myUnsafe.objectFieldOffset(myField);
 		int value = myUnsafe.getInt(valueInt, myFieldOffset);
-		if (value != i) {
-			throw new Error("Expected " + i + " from getInt() but got " + value);
+		if (value != iNew) {
+			throw new Error("Expected " + iNew + " from getInt() but got " + value);
 		}
 	}		
 	
@@ -673,18 +696,11 @@ public class ValueTypeTests {
 		valueDouble = withDouble.invoke(valueDouble, dNew);
 		assertEquals(getDouble.invoke(valueDouble), dNew);
 
-
-		MethodHandle getDGeneric = generateGenericGetter(valueDoubleClass, "d");
-		MethodHandle withDGeneric = generateGenericWither(valueDoubleClass, "d");
-		
-		valueDouble = withDGeneric.invoke(valueDouble, d);
-		assertEquals(getDGeneric.invoke(valueDouble), d);
-		
 		Field myField = valueDoubleClass.getDeclaredField("d");
 		long myFieldOffset = myUnsafe.objectFieldOffset(myField);
 		double value = myUnsafe.getDouble(valueDouble, myFieldOffset);
-		if (value != d) {
-			throw new Error("Expected " + d + " from getDouble() but got " + value);
+		if (value != dNew) {
+			throw new Error("Expected " + dNew + " from getDouble() but got " + value);
 		}
 	}
 
@@ -713,19 +729,12 @@ public class ValueTypeTests {
 	
 		valueFloat = withFloat.invoke(valueFloat, fNew);
 		assertEquals(getFloat.invoke(valueFloat), fNew);
-
-
-		MethodHandle getFGeneric = generateGenericGetter(valueFloatClass, "f");
-		MethodHandle withFGeneric = generateGenericWither(valueFloatClass, "f");
-		
-		valueFloat = withFGeneric.invoke(valueFloat, f);
-		assertEquals(getFGeneric.invoke(valueFloat), f);
-		
+	
 		Field myField = valueFloatClass.getDeclaredField("f");
 		long myFieldOffset = myUnsafe.objectFieldOffset(myField);
 		float value = myUnsafe.getFloat(valueFloat, myFieldOffset);
-		if (value != f) {
-			throw new Error("Expected " + f + " from getFloat() but got " + value);
+		if (value != fNew) {
+			throw new Error("Expected " + fNew + " from getFloat() but got " + value);
 		}
 	}
 	
@@ -757,18 +766,18 @@ public class ValueTypeTests {
 		valueObject = withObject.invoke(valueObject, valNew);
 		assertEquals(getObject.invoke(valueObject), valNew);
 
-
+/*
 		MethodHandle getValGeneric = generateGenericGetter(valueObjectClass, "val");
 		MethodHandle withValGeneric = generateGenericWither(valueObjectClass, "val");
 		
 		valueObject = withValGeneric.invoke(valueObject, val);
 		assertEquals(getValGeneric.invoke(valueObject), val);
-		
+*/		
 		Field myField = valueObjectClass.getDeclaredField("val");
 		long myFieldOffset = myUnsafe.objectFieldOffset(myField);
 		Object value = myUnsafe.getObject(valueObject, myFieldOffset);
-		if (!value.equals(val)) {
-			throw new Error("Expected " + val + " from getFloat() but got " + value);
+		if (value != valNew) {
+			throw new Error("different object from getObject()");
 		}
 	}
 	
