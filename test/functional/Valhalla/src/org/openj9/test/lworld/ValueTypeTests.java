@@ -957,15 +957,13 @@ public class ValueTypeTests {
 					}
 				}
 		} catch(IllegalAccessException e) {
-			throw new Error("Unable to find an instance of Unsafe");
+			Assert.fail("Unable to find an instance of Unsafe");
 		}
 	}
 	
-	
-	
 	static void checkEqualPoint2D(Object point, int[] positions) throws Throwable {
 		if(point == null) {
-			throw new Error("Point Obejct is null!");
+			Assert.fail("Point Obejct is null!");
 		}
 		assertEquals(getX.invoke(point), positions[0]);
 		assertEquals(getY.invoke(point), positions[1]);
