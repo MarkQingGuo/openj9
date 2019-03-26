@@ -314,6 +314,7 @@ public class J9ObjectStructureFormatter extends BaseStructureFormatter
 				}
 				
 				if (printField) {
+					//may use override function here
 					printObjectField(out, tabLevel, localClazz, dataStart, superclass, result);
 					out.println();
 				}
@@ -343,6 +344,56 @@ public class J9ObjectStructureFormatter extends BaseStructureFormatter
 		} else if (fieldShape.modifiers().anyBitsIn(J9FieldFlagObject)) {
 			AbstractPointer ptr = J9BuildFlags.gc_compressedPointers ? U32Pointer.cast(valuePtr) : UDATAPointer.cast(valuePtr);
 			out.print(String.format("!fj9object 0x%x", ptr.at(0).longValue()));
+
+		} else {
+			out.print(I32Pointer.cast(valuePtr).at(0).getHexValue());
+		}
+		
+		out.print(String.format(" (offset=%d) (%s)", fieldOffset.longValue(), className));
+				
+		if (isHiddenField) {
+			out.print(" <hidden>");
+		}
+	}
+	
+	private void padding(PrintStream out, int level) 
+	{
+		for (int i = 0; i < level; i++) {
+			out.print(PADDING);
+		}
+	}
+	
+	
+	/*
+	 * overrided function
+	 */
+	public void printObjectField(PrintStream out, int tabLevel, J9ClassPointer localClazz, U8Pointer dataStart, J9ClassPointer fromClass, J9ObjectFieldOffset objectFieldOffset, long hexAddress, int index) throws CorruptDataException 
+	{
+		J9ROMFieldShapePointer fieldShape = objectFieldOffset.getField();
+		UDATA fieldOffset = objectFieldOffset.getOffsetOrAddress();
+		boolean isHiddenField = objectFieldOffset.isHidden();
+		
+		String className = J9UTF8Helper.stringValue(fromClass.romClass().className());
+		String fieldName = J9UTF8Helper.stringValue(fieldShape.nameAndSignature().name());
+		String fieldSignature = J9UTF8Helper.stringValue(fieldShape.nameAndSignature().signature());
+		
+		U8Pointer valuePtr = dataStart;
+		valuePtr = valuePtr.add(fieldOffset);
+
+		padding(out, tabLevel);
+		out.print(String.format("%s %s = ", fieldSignature, fieldName));
+		
+		if (fieldShape.modifiers().anyBitsIn(J9FieldSizeDouble)) {
+			out.print(U64Pointer.cast(valuePtr).at(0).getHexValue());
+		} else if (fieldShape.modifiers().anyBitsIn(J9FieldFlagObject)) {
+			AbstractPointer ptr = J9BuildFlags.gc_compressedPointers ? U32Pointer.cast(valuePtr) : UDATAPointer.cast(valuePtr);
+			out.print(String.format("!fj9object 0x%x", ptr.at(0).longValue()));
+		/*
+		 * modified
+		 */
+		} else if (fieldShape.modifiers().anyBitsIn(IsJ9ClassIsFlattened)) {
+			//not from here, when you iterate through the field
+			out.print(String.format("!flatobject 0x%x,%d", hexAddress, index));
 		} else {
 			out.print(I32Pointer.cast(valuePtr).at(0).getHexValue());
 		}

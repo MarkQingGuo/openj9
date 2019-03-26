@@ -28,6 +28,9 @@ import static com.ibm.j9ddr.vm29.j9.ObjectFieldInfo.NO_BACKFILL_AVAILABLE;
 import static com.ibm.j9ddr.vm29.j9.ObjectFieldInfo.fj9object_t_SizeOf;
 import static com.ibm.j9ddr.vm29.structure.J9FieldFlags.J9FieldFlagObject;
 import static com.ibm.j9ddr.vm29.structure.J9FieldFlags.J9FieldSizeDouble;
+import static com.ibm.j9ddr.vm29.structure.J9FieldFlags.J9ClassIsFlattened;
+import static com.ibm.j9ddr.vm29.structure.J9FieldFlags.J9ClassLargestAlignmentConstraintDouble;
+import static com.ibm.j9ddr.vm29.structure.J9FieldFlags.J9ClassLargestAlignmentConstraintReference;
 import static com.ibm.j9ddr.vm29.structure.J9JavaAccessFlags.J9AccStatic;
 import static com.ibm.j9ddr.vm29.structure.J9ROMFieldOffsetWalkState.J9VM_FIELD_OFFSET_WALK_BACKFILL_OBJECT_FIELD;
 import static com.ibm.j9ddr.vm29.structure.J9ROMFieldOffsetWalkState.J9VM_FIELD_OFFSET_WALK_BACKFILL_SINGLE_FIELD;
@@ -53,6 +56,7 @@ import com.ibm.j9ddr.vm29.pointer.generated.J9ROMClassPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.J9ROMFieldShapePointer;
 import com.ibm.j9ddr.vm29.pointer.helper.J9ClassHelper;
 import com.ibm.j9ddr.vm29.pointer.helper.J9ROMClassHelper;
+import com.ibm.j9ddr.vm29.pointer.helper.J9ROMFieldShapeHelper;
 import com.ibm.j9ddr.vm29.structure.J9Object;
 import com.ibm.j9ddr.vm29.types.IDATA;
 import com.ibm.j9ddr.vm29.types.U32;
@@ -78,6 +82,14 @@ public class J9ObjectFieldOffsetIterator_V1 extends J9ObjectFieldOffsetIterator 
 	private UDATA firstDoubleOffset = new UDATA(0);
 	private UDATA firstSingleOffset = new UDATA(0);
 	private UDATA firstObjectOffset = new UDATA(0);
+	/* modified */
+	private UDATA firstFlatDoubleOffset = new UDATA(0);
+	private UDATA firstFlatObjectOffset = new UDATA(0);
+	private UDATA firstFlatSingleOffset = new UDATA(0);
+	private UDATA currentFlatDoubleOffset = new UDATA(0);
+	private UDATA currentFlatObjectOffset = new UDATA(0);
+	private UDATA currentFlatSingleOffset = new UDATA(0);
+	//
 	private U32 objectsSeen = new U32(0);
 	private U32 objectStaticsSeen = new U32(0);
 	private U32 singlesSeen = new U32(0);
@@ -200,8 +212,41 @@ public class J9ObjectFieldOffsetIterator_V1 extends J9ObjectFieldOffsetIterator 
 							offset = new UDATA(backfillOffsetToUse);
 							walkFlags = walkFlags.bitAnd(new U32(new UDATA(J9VM_FIELD_OFFSET_WALK_BACKFILL_OBJECT_FIELD).bitNot()));
 						} else {
-							offset = firstObjectOffset.add(objectsSeen.mult(fj9object_t_SizeOf));
-							objectsSeen = objectsSeen.add(1);
+// ValueTypes
+							String fieldSig = J9ROMFieldShapeHelper.getSignature(localField);
+							if("Q" == fieldSig.substring(0, 1))) {
+								/*
+								 * find flags
+								 */
+								UDATA flatFlags = new UDATA(0); //TODO: remove it
+								if(!flatFlags.anyBitsIn(J9ClassIsFlattened)) {
+									
+								} else {
+									/*
+									 * U_32 firstFieldOffset = (U_32) fieldClass->backfillOffset;
+									 * state->result.flattenedClass = fieldClass;
+									 */
+									/*
+									 * TODO:update flags
+									 */
+									if(flatFlags.anyBitsIn(J9ClassLargestAlignmentConstraintDouble)) {
+										state->result.offset = state->firstFlatDoubleOffset + state->currentFlatDoubleOffset - firstFieldOffset;
+										state->currentFlatDoubleOffset += ROUND_UP_TO_POWEROF2(fieldClass->totalInstanceSize - firstFieldOffset, sizeof(U_64));
+									} else if(flatFlags.anyBitsIn(J9ClassLargestAlignmentConstraintReference)) {
+										//
+									} else {
+										//
+									}
+									
+								}
+								
+								
+							} else
+//
+							{
+								offset = firstObjectOffset.add(objectsSeen.mult(fj9object_t_SizeOf));
+								objectsSeen = objectsSeen.add(1);
+							}
 						}
 						field = localField;
 						break;
