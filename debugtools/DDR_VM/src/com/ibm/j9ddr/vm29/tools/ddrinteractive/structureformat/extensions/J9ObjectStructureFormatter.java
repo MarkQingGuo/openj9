@@ -411,4 +411,15 @@ public class J9ObjectStructureFormatter extends BaseStructureFormatter
 			out.print(PADDING);
 		}
 	}
+	
+	private boolean checkFlat(PrintStream out, int tabLevel, J9ClassPointer localClazz, U8Pointer dataStart, J9ClassPointer fromClass, J9ObjectFieldOffset objectFieldOffset) throws CorruptDataException {
+		UDATA flattenedClassCache = localClazz.flattenedClassCache();
+		
+		J9UTF8 *fieldSig = J9ROMFIELDSHAPE_SIGNATURE(field);
+		U_8 *fieldSigBytes = J9UTF8_DATA(fieldSig);
+		
+		J9ROMFieldShapePointer fieldShape = objectFieldOffset.getField();
+		UDATA flattenedcache= J9classPointer.flattenedClassCache()
+	}
+	
 }
