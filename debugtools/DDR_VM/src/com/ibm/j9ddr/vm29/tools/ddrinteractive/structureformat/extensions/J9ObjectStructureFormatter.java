@@ -385,15 +385,15 @@ public class J9ObjectStructureFormatter extends BaseStructureFormatter
 		
 		if (fieldShape.modifiers().anyBitsIn(J9FieldSizeDouble)) {
 			out.print(U64Pointer.cast(valuePtr).at(0).getHexValue());
+		} else if ("Q" == fieldShape.getSignature()[0]) {
+			//not from here, when you iterate through the field
+			out.print(String.format("!flatobject 0x%x,%d", hexAddress, index));
 		} else if (fieldShape.modifiers().anyBitsIn(J9FieldFlagObject)) {
 			AbstractPointer ptr = J9BuildFlags.gc_compressedPointers ? U32Pointer.cast(valuePtr) : UDATAPointer.cast(valuePtr);
 			out.print(String.format("!fj9object 0x%x", ptr.at(0).longValue()));
 		/*
 		 * modified
 		 */
-		} else if (fieldShape.modifiers().anyBitsIn(IsJ9ClassIsFlattened)) {
-			//not from here, when you iterate through the field
-			out.print(String.format("!flatobject 0x%x,%d", hexAddress, index));
 		} else {
 			out.print(I32Pointer.cast(valuePtr).at(0).getHexValue());
 		}
@@ -412,14 +412,30 @@ public class J9ObjectStructureFormatter extends BaseStructureFormatter
 		}
 	}
 	
-	private boolean checkFlat(PrintStream out, int tabLevel, J9ClassPointer localClazz, U8Pointer dataStart, J9ClassPointer fromClass, J9ObjectFieldOffset objectFieldOffset) throws CorruptDataException {
-		UDATA flattenedClassCache = localClazz.flattenedClassCache();
-		
-		J9UTF8 *fieldSig = J9ROMFIELDSHAPE_SIGNATURE(field);
-		U_8 *fieldSigBytes = J9UTF8_DATA(fieldSig);
-		
+	private J9ClassPointer findJ9ClassInFlattenedClassCache(J9ClassPointer localClazz, J9ObjectFieldOffset objectFieldOffset) throws CorruptDataException {
+		UDATA length = localClazz.flattenedClassCache().offset();
 		J9ROMFieldShapePointer fieldShape = objectFieldOffset.getField();
-		UDATA flattenedcache= J9classPointer.flattenedClassCache()
+		String fieldName = fieldShape.getName();
+		J9ClassPointer resultClazz = J9ClassPointer.NULL;
+		
+		for(UDATA i = 0; i < length; i++) {
+			J9ClassPointer currentClazz = (localClazz.flattenedClassCache()).at(i).clazz();
+			if(fieldName == currentClazz.getName()) {
+				resultClazz = currentClazz;
+				break;
+			}
+		}
+		/*
+		 * if null have a string
+		 */
+		
+		return resultClazz;
+	}
+	
+	private boolean checkFlat(J9ClassPointer localClazz, J9ObjectFieldOffset objectFieldOffset) throws CorruptDataException {
+		J9ROMFieldShapePointer fieldShape = objectFieldOffset.getField();
+		String sigName = fieldShape.getSignature();
+		return ("Q" == sigName[0]);
 	}
 	
 }
